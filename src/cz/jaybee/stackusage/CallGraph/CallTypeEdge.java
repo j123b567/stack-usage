@@ -3,8 +3,8 @@ package cz.jaybee.stackusage.CallGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 /**
- *
- * @author jaybee
+ * Call graph edge
+ * @author Jan Breuer
  */
 public class CallTypeEdge extends DefaultEdge {
     CallType type;

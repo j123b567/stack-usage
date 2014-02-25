@@ -1,90 +1,33 @@
 package cz.jaybee.stackusage.CallGraph;
 
-import cz.jaybee.stackusage.MapFile;
-import cz.jaybee.stackusage.StackUsage;
-import java.io.BufferedReader;
+import cz.jaybee.stackusage.MapFile.MapFileGCC;
+import cz.jaybee.stackusage.StackUsage.StackUsageGCC;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.jgrapht.alg.*;
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.graph.DefaultDirectedGraph;
 
 /**
+ * Call Graph implementation
  *
- * @author jaybee
+ * @author Jan Breuer
  */
-public class CallGraph {
+public abstract class CallGraph {
 
-    private static class BindingNode {
-
-        FunctionNode caller;
-        FunctionNode callee;
-        CallType type;
-
-        public BindingNode(FunctionNode caller, FunctionNode callee, CallType type) {
-            this.caller = caller;
-            this.callee = callee;
-            this.type = type;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-
-            sb.append(caller);
-            sb.append(";");
-            sb.append(callee);
-            sb.append(";");
-            sb.append(type);
-
-            return sb.toString();
-        }
-    }
-    List<BindingNode> nodes;
-    Set<FunctionNode> functions;
-    Set<FunctionNode> recursiveFunctions;
-    DirectedGraph<FunctionNode, CallTypeEdge> graph;
-    Pattern pFunc;
-    Pattern pCall;
-    Pattern pRef;
-    Pattern pPtr;
-    Pattern pPtr2;
-    Pattern pPtr3;
+    private Set<FunctionNode> functions;
+    private Set<FunctionNode> recursiveFunctions;
+    private DirectedGraph<FunctionNode, CallTypeEdge> graph;
+    private List<BindingNode> bindings;
 
     public CallGraph() {
-        nodes = new ArrayList<>();
+        bindings = new ArrayList<>();
         functions = new TreeSet<>();
         recursiveFunctions = null;
-
-        pFunc = Pattern.compile("^;; Function (.*)\\s+\\((\\S+)(,.*)?\\)\\s*$");
-        pCall = Pattern.compile("^.*\\(call.*\"(.*)\".*$");
-        pRef = Pattern.compile("^.*\\(symbol_ref.*\"(.*)\".*$");
-        pPtr = Pattern.compile("^.*\\(call.*\\(reg\\/.*\\*(.*)\\..*$");
-        //(call (mem:SI (reg/v/f:SI 187 [ p_DataLoad ]) [0 *p_DataLoad_23(D) S4 A32])
-        pPtr2 = Pattern.compile("^.*\\(call.*\\(reg\\/.* \\[ (.*) \\]\\).*$");
-        pPtr3 = Pattern.compile("^.*\\(call.*\\(reg\\/[^ ]* ([^\\)]*)\\).*$");
-    }
-
-    private String removeAfterDot(String text) {
-        int dotPos = text.indexOf(".");
-
-        if (dotPos == -1) {
-            return text;
-        } else {
-            return text.substring(0, dotPos);
-        }
     }
 
     private List<FunctionNode> getFunctionNodes(String func) {
@@ -118,12 +61,12 @@ public class CallGraph {
     }
 
     private void findCalleeFiles() {
-        for (BindingNode bn : nodes) {
+        for (BindingNode bn : bindings) {
             findCalleeFile(bn);
         }
     }
 
-    private void findStackUsage(StackUsage su) {
+    private void findStackUsage(StackUsageGCC su) {
         for (FunctionNode fn : functions) {
             FunctionNode fn2 = su.findNode(fn);
             if (fn2 != null) {
@@ -151,110 +94,28 @@ public class CallGraph {
         su.removeUsed();
     }
 
-    public void LoadFile(File file) {
-        String callerFile = file.getName();
-        FunctionNode caller = null;
-        FunctionNode callee;
-
-        {
-            Pattern p = Pattern.compile("^(.*)\\..*\\.expand$");
-            Matcher m = p.matcher(callerFile);
-            if (m.find()) {
-                callerFile = m.group(1);
-            }
-        }
-
-        try {
-            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                String line;
-                while (true) {
-                    line = br.readLine();
-                    if (line == null) {
-                        break;
-                    }
-
-                    Matcher m;
-                    m = pFunc.matcher(line);
-                    if (m.find()) {
-                        caller = new FunctionNode(callerFile, removeAfterDot(m.group(2)));
-                        functions.add(caller);
-                        continue;
-                    }
-
-                    m = pCall.matcher(line);
-                    if (m.find()) {
-                        callee = new FunctionNode("", removeAfterDot(m.group(1)));
-                        nodes.add(new BindingNode(caller, callee, CallType.CALL));
-                        continue;
-                    }
-
-                    /*
-                     m = pRef.matcher(line);
-                     if (m.find()) {
-                     callee = m.group(1);
-                     if (callee.contains("*")) {
-                     continue;
-                     }
-                     callee = removeAfterDot(callee);
-                     nodes.add(new CallGraphNode(curFile, caller, callee, CallGraphType.REF));
-                     continue;
-                     }
-                     */
-
-                    m = pPtr.matcher(line);
-                    if (m.find()) {
-                        callee = new FunctionNode("", removeAfterDot(m.group(1)));
-//                        if (callee.func.contains("*")) {
-//                            continue;
-//                        }
-                        nodes.add(new BindingNode(caller, callee, CallType.PTR1));
-                        continue;
-                    }
-
-                    m = pPtr2.matcher(line);
-                    if (m.find()) {
-                        callee = new FunctionNode("", m.group(1));
-                        nodes.add(new BindingNode(caller, callee, CallType.PTR2));
-                        continue;
-                    }
-
-                    m = pPtr3.matcher(line);
-                    if (m.find()) {
-                        callee = new FunctionNode("", "__PTR_FUNC_" + m.group(1));
-                        nodes.add(new BindingNode(caller, callee, CallType.PTR3));
-                        continue;
-                    }
-                }
-            }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(CallGraph.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(CallGraph.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     private void removeBadReferences() {
         List<FunctionNode> fnlist = new ArrayList<>();
 
         for (FunctionNode fn : functions) {
             fnlist.add(fn);
         }
-                
-        for (BindingNode bn: nodes) {
+
+        for (BindingNode bn : bindings) {
             bn.callee = fnlist.get(fnlist.indexOf(bn.callee));
             bn.caller = fnlist.get(fnlist.indexOf(bn.caller));
-        }    
+        }
     }
-    
+
     private void createGraph() {
         DirectedGraph<FunctionNode, CallTypeEdge> directedGraph;
         directedGraph = new DefaultDirectedGraph<>(CallTypeEdge.class);
-                
+
         for (FunctionNode fn : functions) {
             directedGraph.addVertex(fn);
         }
-                
-        for (BindingNode bn : nodes) {
+
+        for (BindingNode bn : bindings) {
             try {
                 directedGraph.addEdge(bn.caller, bn.callee, new CallTypeEdge(bn.type));
             } catch (Exception ex) {
@@ -278,7 +139,7 @@ public class CallGraph {
         return sb.toString();
     }
 
-    private void removeDiscardedFunctions(MapFile mf) {
+    private void removeDiscardedFunctions(MapFileGCC mf) {
         Iterator<FunctionNode> iter = functions.iterator();
         while (iter.hasNext()) {
             FunctionNode fn = iter.next();
@@ -342,7 +203,6 @@ public class CallGraph {
             }
             if (maxStack >= 0) {
                 if (isRecursive(fn)) {
-                    
                 } else {
                     fn.maxStack = maxStack + fn.stack;
                 }
@@ -352,7 +212,7 @@ public class CallGraph {
         }
     }
 
-    public void process(StackUsage su, MapFile mf) {
+    public void process(StackUsageGCC su, MapFileGCC mf) {
         findCalleeFiles();
         findStackUsage(su);
         removeBadReferences();
@@ -416,5 +276,15 @@ public class CallGraph {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    public abstract void load(File file);
+    
+    protected void addFunction(FunctionNode fn) {
+        functions.add(fn);
+    }
+    
+    protected void addBinding(BindingNode bn) {
+        bindings.add(bn);
     }
 }

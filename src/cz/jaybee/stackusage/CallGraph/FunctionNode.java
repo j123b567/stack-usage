@@ -3,8 +3,8 @@ package cz.jaybee.stackusage.CallGraph;
 import java.util.Objects;
 
 /**
- *
- * @author jaybee
+ * Call Graph node
+ * @author Jan Breuer
  */
 public class FunctionNode implements Comparable<FunctionNode> {
     public String file;

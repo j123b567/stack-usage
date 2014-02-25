@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author jaybee
+ * File manipulating utilities
+ * @author Jan Breuer
  */
 public class FileUtils {
 

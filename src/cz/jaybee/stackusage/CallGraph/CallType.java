@@ -1,8 +1,8 @@
 package cz.jaybee.stackusage.CallGraph;
 
 /**
- *
- * @author jaybee
+ * Type of function calls
+ * @author Jan Breuer
  */
 public enum CallType {
     UNUSED,
