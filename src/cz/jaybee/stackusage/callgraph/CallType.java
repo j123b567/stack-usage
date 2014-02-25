@@ -1,4 +1,4 @@
-package cz.jaybee.stackusage.CallGraph;
+package cz.jaybee.stackusage.callgraph;
 
 /**
  * Type of function calls

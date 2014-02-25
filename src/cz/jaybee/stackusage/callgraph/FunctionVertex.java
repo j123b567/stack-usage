@@ -1,4 +1,4 @@
-package cz.jaybee.stackusage.CallGraph;
+package cz.jaybee.stackusage.callgraph;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ import java.util.Objects;
  * Call Graph node
  * @author Jan Breuer
  */
-public class FunctionNode implements Comparable<FunctionNode> {
+public class FunctionVertex implements Comparable<FunctionVertex> {
     public String file;
     public String func;
     public int stack;
@@ -19,7 +19,7 @@ public class FunctionNode implements Comparable<FunctionNode> {
     
     public int maxStack;
     
-    public FunctionNode(String file, String func) {
+    public FunctionVertex(String file, String func) {
         this.file = file;
         this.func = func;
         this.stack = -1;
@@ -27,7 +27,7 @@ public class FunctionNode implements Comparable<FunctionNode> {
         this.maxStack = -1;
     }
 
-    public FunctionNode() {
+    public FunctionVertex() {
         this.file = "";
         this.func = "";
         this.stack = -1;
@@ -46,7 +46,7 @@ public class FunctionNode implements Comparable<FunctionNode> {
     }    
 
     @Override
-    public int compareTo(FunctionNode o) {
+    public int compareTo(FunctionVertex o) {
         if (file.equals(o.file)) {
             return func.compareTo(o.func);
         } else {
@@ -56,10 +56,10 @@ public class FunctionNode implements Comparable<FunctionNode> {
     
     @Override
     public boolean equals(Object obj) {
-        if (obj.getClass() != FunctionNode.class) {
+        if (obj.getClass() != FunctionVertex.class) {
             return false;
         }
-        return compareTo((FunctionNode) obj) == 0;
+        return compareTo((FunctionVertex) obj) == 0;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class FunctionNode implements Comparable<FunctionNode> {
         return hash;
     }
     
-    public void clone(FunctionNode o) {
+    public void clone(FunctionVertex o) {
         this.charPos = o.charPos;
         this.file = o.file;
         this.func = o.func;

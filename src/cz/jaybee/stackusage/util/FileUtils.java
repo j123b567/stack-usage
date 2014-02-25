@@ -1,4 +1,4 @@
-package cz.jaybee.stackusage;
+package cz.jaybee.stackusage.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -10,10 +10,10 @@ import java.util.List;
  */
 public class FileUtils {
 
-    public static List<File> ListFiles(String path, String extension) {
+    public static List<File> ListFiles(File baseDir, String extension) {
 
         List<File> result = new ArrayList<>();
-        File root = new File(path);
+        File root = baseDir;
         File[] list;
         
         if (root.isDirectory()) {
@@ -29,7 +29,7 @@ public class FileUtils {
 
         for (File f : list) {
             if (f.isDirectory()) {
-                result.addAll(ListFiles(f.getPath(), extension));
+                result.addAll(ListFiles(f, extension));
             } else if (f.isFile()) {
                 if (f.getName().endsWith(extension)) {
                     result.add(f);

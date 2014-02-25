@@ -1,5 +1,10 @@
-package cz.jaybee.stackusage.CallGraph;
+package cz.jaybee.stackusage.callgraph;
 
+import cz.jaybee.stackusage.mapfile.MapFile;
+import cz.jaybee.stackusage.mapfile.MapFileGCC;
+import cz.jaybee.stackusage.stackusage.StackUsage;
+import cz.jaybee.stackusage.stackusage.StackUsageGCC;
+import cz.jaybee.stackusage.util.FileUtils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -20,6 +25,19 @@ public class CallGraphGCC extends CallGraph {
         super();
     }
 
+    public CallGraphGCC(File baseDir) {
+
+        MapFile mf = new MapFileGCC();
+        mf.load(FileUtils.ListFiles(baseDir, ".map"));
+
+        StackUsage su = new StackUsageGCC();
+        su.load(FileUtils.ListFiles(baseDir, ".su"));
+
+        load(FileUtils.ListFiles(baseDir, ".expand"));
+
+        process(su, mf);        
+    }
+    
     private String removeAfterDot(String text) {
         int dotPos = text.indexOf(".");
 
@@ -42,8 +60,8 @@ public class CallGraphGCC extends CallGraph {
         Pattern pPtr3 = Pattern.compile("^.*\\(call.*\\(reg\\/[^ ]* ([^\\)]*)\\).*$");
 
         String callerFile = file.getName();
-        FunctionNode caller = null;
-        FunctionNode callee;
+        FunctionVertex caller = null;
+        FunctionVertex callee;
 
         {
             Pattern p = Pattern.compile("^(.*)\\..*\\.expand$");
@@ -60,15 +78,15 @@ public class CallGraphGCC extends CallGraph {
                 Matcher m;
                 m = pFunc.matcher(line);
                 if (m.find()) {
-                    caller = new FunctionNode(callerFile, removeAfterDot(m.group(2)));
+                    caller = new FunctionVertex(callerFile, removeAfterDot(m.group(2)));
                     addFunction(caller);
                     continue;
                 }
 
                 m = pCall.matcher(line);
                 if (m.find()) {
-                    callee = new FunctionNode("", removeAfterDot(m.group(1)));
-                    addBinding(new BindingNode(caller, callee, CallType.CALL));
+                    callee = new FunctionVertex("", removeAfterDot(m.group(1)));
+                    addFunctionCall(new FunctionCall(caller, callee, CallType.CALL));
                     continue;
                 }
 
@@ -87,25 +105,25 @@ public class CallGraphGCC extends CallGraph {
 
                 m = pPtr.matcher(line);
                 if (m.find()) {
-                    callee = new FunctionNode("", removeAfterDot(m.group(1)));
+                    callee = new FunctionVertex("", removeAfterDot(m.group(1)));
 //                        if (callee.func.contains("*")) {
 //                            continue;
 //                        }
-                    addBinding(new BindingNode(caller, callee, CallType.PTR1));
+                    addFunctionCall(new FunctionCall(caller, callee, CallType.PTR1));
                     continue;
                 }
 
                 m = pPtr2.matcher(line);
                 if (m.find()) {
-                    callee = new FunctionNode("", m.group(1));
-                    addBinding(new BindingNode(caller, callee, CallType.PTR2));
+                    callee = new FunctionVertex("", m.group(1));
+                    addFunctionCall(new FunctionCall(caller, callee, CallType.PTR2));
                     continue;
                 }
 
                 m = pPtr3.matcher(line);
                 if (m.find()) {
-                    callee = new FunctionNode("", "__PTR_FUNC_" + m.group(1));
-                    addBinding(new BindingNode(caller, callee, CallType.PTR3));
+                    callee = new FunctionVertex("", "__PTR_FUNC_" + m.group(1));
+                    addFunctionCall(new FunctionCall(caller, callee, CallType.PTR3));
                     continue;
                 }
             }

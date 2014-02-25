@@ -1,4 +1,4 @@
-package cz.jaybee.stackusage.CallGraph;
+package cz.jaybee.stackusage.callgraph;
 
 import org.jgrapht.graph.DefaultEdge;
 
@@ -6,13 +6,13 @@ import org.jgrapht.graph.DefaultEdge;
  * Call graph edge
  * @author Jan Breuer
  */
-public class CallTypeEdge extends DefaultEdge {
+public class CallEdge extends DefaultEdge {
     CallType type;
     
-    public CallTypeEdge(CallType type) {
+    public CallEdge(CallType type) {
         this.type = type;
     }
-       
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

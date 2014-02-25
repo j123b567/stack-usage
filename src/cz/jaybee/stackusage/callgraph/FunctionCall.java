@@ -1,16 +1,16 @@
-package cz.jaybee.stackusage.CallGraph;
+package cz.jaybee.stackusage.callgraph;
 
 /**
  *
  * @author Jan Breuer
  */
-public class BindingNode {
+public class FunctionCall {
 
-    FunctionNode caller;
-    FunctionNode callee;
+    FunctionVertex caller;
+    FunctionVertex callee;
     CallType type;
 
-    public BindingNode(FunctionNode caller, FunctionNode callee, CallType type) {
+    public FunctionCall(FunctionVertex caller, FunctionVertex callee, CallType type) {
         this.caller = caller;
         this.callee = callee;
         this.type = type;

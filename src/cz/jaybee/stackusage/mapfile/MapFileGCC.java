@@ -1,6 +1,6 @@
-package cz.jaybee.stackusage.MapFile;
+package cz.jaybee.stackusage.mapfile;
 
-import cz.jaybee.stackusage.CallGraph.FunctionNode;
+import cz.jaybee.stackusage.callgraph.FunctionVertex;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -63,6 +63,7 @@ public final class MapFileGCC extends MapFile {
                     }
                 }
                 if (newSection) {
+                    newSection = false;
                     continue;
                 }
                 
@@ -74,7 +75,7 @@ public final class MapFileGCC extends MapFile {
                             }
                             Matcher m = p.matcher(line);
                             if (m.find()) {
-                                FunctionNode fn = new FunctionNode(m.group(2), m.group(1));
+                                FunctionVertex fn = new FunctionVertex(m.group(2), m.group(1));
                                 fn.file = fn.file.substring(fn.file.lastIndexOf('\\') + 1) + ".c";
 
                                 addDiscardedFunction(fn);

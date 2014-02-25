@@ -1,6 +1,6 @@
-package cz.jaybee.stackusage.StackUsage;
+package cz.jaybee.stackusage.stackusage;
 
-import cz.jaybee.stackusage.CallGraph.FunctionNode;
+import cz.jaybee.stackusage.callgraph.FunctionVertex;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public abstract class StackUsage {
 
-    private List<FunctionNode> nodes;
+    private List<FunctionVertex> nodes;
 
     public StackUsage() {
         nodes = new ArrayList<>();
@@ -28,12 +28,12 @@ public abstract class StackUsage {
         return true;
     }
 
-    protected static List<FunctionNode> removeDuplicateFunctions(List<FunctionNode> fileNodes) {
-        List<FunctionNode> result = new ArrayList<>();
+    protected static List<FunctionVertex> removeDuplicateFunctions(List<FunctionVertex> fileNodes) {
+        List<FunctionVertex> result = new ArrayList<>();
         int index;
-        FunctionNode cmpnode;
+        FunctionVertex cmpnode;
 
-        for (FunctionNode node : fileNodes) {
+        for (FunctionVertex node : fileNodes) {
             for (index = result.size() - 1; index >= 0; index--) {
                 cmpnode = result.get(index);
 
@@ -51,11 +51,11 @@ public abstract class StackUsage {
         return result;
     }
 
-    protected void addNodes(List<FunctionNode> _nodes) {
+    protected void addNodes(List<FunctionVertex> _nodes) {
         nodes.addAll(_nodes);
     }
 
-    public FunctionNode findNode(FunctionNode func) {
+    public FunctionVertex findNode(FunctionVertex func) {
         int index = nodes.indexOf(func);
         if (index >= 0) {
             return nodes.get(index);
@@ -66,7 +66,7 @@ public abstract class StackUsage {
     }
 
     public void removeUsed() {
-        Iterator<FunctionNode> iter = nodes.iterator();
+        Iterator<FunctionVertex> iter = nodes.iterator();
         while (iter.hasNext()) {
             if (iter.next().used) {
                 iter.remove();
@@ -78,13 +78,19 @@ public abstract class StackUsage {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        for (FunctionNode node : nodes) {
+        for (FunctionVertex node : nodes) {
             sb.append(node);
             sb.append("\n");
         }
 
         return sb.toString();
     }
-    
+
     public abstract void load(File file);
+
+    public void load(List<File> files) {
+        for (File f : files) {
+            load(f);
+        }
+    }
 }

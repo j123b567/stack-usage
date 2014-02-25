@@ -1,7 +1,6 @@
-package cz.jaybee.stackusage.StackUsage;
+package cz.jaybee.stackusage.stackusage;
 
-import cz.jaybee.stackusage.CallGraph.FunctionNode;
-import static cz.jaybee.stackusage.StackUsage.StackUsage.removeDuplicateFunctions;
+import cz.jaybee.stackusage.callgraph.FunctionVertex;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -29,11 +28,11 @@ public class StackUsageGCC extends StackUsage {
      */
     @Override
     public void load(File file) {
-        List<FunctionNode> fileNodes = new ArrayList<>();
+        List<FunctionVertex> fileNodes = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
-                FunctionNode node = new FunctionNode();
+                FunctionVertex node = new FunctionVertex();
                 String[] sline = line.split(":");
                 node.file = sline[0];
                 node.line = Integer.parseInt(sline[1]);
